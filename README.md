@@ -286,3 +286,43 @@ app/dependencies.py 100%
 app/models.py       100%
 app/schemas.py      100%
 ```
+
+Директория `htmlcov/` добавлена в `.gitignore`, поэтому HTML-отчет не
+коммитится. Для сдачи можно приложить скриншот страницы `htmlcov/index.html`.
+
+## CI/CD
+
+Для автоматического запуска тестов добавлен GitHub Actions workflow:
+
+```text
+.github/workflows/tests.yml
+```
+
+Workflow запускается при:
+
+- `push`;
+- `pull_request`.
+
+Что выполняется:
+
+- checkout кода;
+- установка Python `3.12`;
+- установка зависимостей из `requirements.txt`;
+- запуск тестов;
+- генерация coverage-отчета;
+- сохранение `htmlcov/` как GitHub Actions artifact.
+
+Команда, которая выполняется в CI:
+
+```bash
+pytest --cov=app --cov-report=term --cov-report=html
+```
+
+HTML-отчет сохраняется как artifact:
+
+```text
+coverage-html-report
+```
+
+Статус workflow в GitHub показывает результат проверки: успешный запуск отмечается
+зеленым статусом, ошибка тестов или покрытия - красным.
