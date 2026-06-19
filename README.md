@@ -26,7 +26,13 @@ app/
   config.py         # настройки приложения
   dependencies.py   # зависимости FastAPI
 tests/
-  test_api.py
+  conftest.py
+  unit/
+    test_cache.py
+    test_crud.py
+  integration/
+    test_api.py
+pytest.ini
 requirements.txt
 ```
 
@@ -191,17 +197,92 @@ Cache miss: ...
 
 ## Тесты
 
-Запуск тестов:
+Проект использует `pytest`, `pytest-asyncio`, `pytest-cov` и `httpx`.
 
-```bash
-venv/bin/python -m pytest tests/test_api.py -q
+Структура тестов:
+
+```text
+tests/
+  conftest.py              # общие фикстуры
+  unit/
+    test_cache.py          # unit-тесты Redis helper-функций
+    test_crud.py           # unit-тесты CRUD-функций с mock БД
+  integration/
+    test_api.py            # интеграционные тесты FastAPI endpoints
 ```
 
-Покрыты базовые сценарии:
+Запуск всех тестов:
+
+```bash
+venv/bin/python -m pytest -q
+```
+
+Запуск только unit-тестов:
+
+```bash
+venv/bin/python -m pytest -m unit -q
+```
+
+Запуск только integration-тестов:
+
+```bash
+venv/bin/python -m pytest -m integration -q
+```
+
+Покрытые сценарии:
 
 - отсутствие обязательных дат в `/api/dynamics`;
 - некорректный период в `/api/dynamics`;
 - успешный ответ `/api/last-trading-dates` через mock;
+- успешные ответы `/api/dynamics` и `/api/trading-results`;
 - cache hit без обращения к CRUD;
 - построение стабильного cache key;
-- расчет TTL до `14:11`.
+- сохранение и получение данных из Redis через mock;
+- расчет TTL до `14:11`;
+- CRUD-функции с mock `AsyncSession.execute`.
+
+Используются:
+
+- `pytest.mark.unit` для unit-тестов;
+- `pytest.mark.integration` для endpoint-тестов;
+- параметризация для проверки разных входных данных;
+- `monkeypatch`, `AsyncMock`, `Mock` для изоляции БД и Redis.
+
+## Покрытие
+
+HTML-отчет покрытия генерируется командой:
+
+```bash
+venv/bin/python -m pytest --cov=app --cov-report=html
+```
+
+Открыть отчет:
+
+```bash
+python3 -m http.server 8001
+```
+
+После запуска сервера:
+
+```text
+http://localhost:8001/htmlcov/
+```
+
+Текущий результат покрытия:
+
+```text
+Total coverage: 91%
+```
+
+По модулям:
+
+```text
+app/cache.py         97%
+app/crud.py          81%
+app/main.py          85%
+app/config.py       100%
+app/database.py     100%
+app/dependencies.py 100%
+app/models.py       100%
+app/schemas.py      100%
+```
